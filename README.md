@@ -14,3 +14,18 @@ npm run deploy   # Deploy a *.sanity.studio
 ```
 
 Los schemas se definen en `schemaTypes/` y se exportan desde `schemaTypes/index.ts`.
+
+## Modelo de datos
+
+| Tipo | Clase | Notas |
+|---|---|---|
+| `product` | documento | `title`, `slug`, `visible`, `cardImage?`, `shortDescription`, `description`, `variants[]` (≥1), `category` → `category`, `tags[]` → `tag` |
+| `category` | documento | Categoría principal (una por producto) |
+| `tag` | documento | Etiquetas reutilizables (varias por producto) |
+| `siteSettings` | documento singleton | `contactEmail`, `socialLinks[]` |
+| `productVariant` | objeto | `format`, `colour`, `finish` (texto libre, al menos uno), `sku?`, `images[]` (≥1), `pricing`, `availability` |
+| `pricing` | objeto | `minimumPrice` > 0, `recommendedPrice` ≥ mínimo, `supportPrice` ≥ recomendado (EUR) |
+| `galleryImage` | objeto (imagen) | hotspot + `alt` obligatorio |
+| `socialLink` | objeto | `platform`, `url` (https) |
+
+La primera variante de `variants` es la variante por defecto. Los productos destacados de la home se definirán como un array ordenado de referencias a `product` en un futuro singleton `homePage`.
