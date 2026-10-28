@@ -1,0 +1,18 @@
+# Dependencies
+/node_modules
+
+# Build output
+/dist
+/.sanity
+
+# Environment
+.env
+.env.local
+.env.development
+.env.production
+
+# Misc
+*.log
+.DS_Store
+.vercel
+.netlify
