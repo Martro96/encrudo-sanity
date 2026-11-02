@@ -1,6 +1,6 @@
 import {HomeIcon} from '@sanity/icons/Home'
 import {defineArrayMember, defineField, defineType} from 'sanity'
-import {EDITORIAL_HELP, editorialBlock} from '../lib/editorialText'
+import {EDITORIAL_HELP, editorialBlock, editorialTextNotBlank} from '../lib/editorialText'
 import {trimmedString} from '../lib/validation'
 
 type Item = {_type?: string; product?: {_ref?: string}; variantKey?: string}
@@ -37,7 +37,10 @@ export const homePage = defineType({
       type: 'array',
       of: [editorialBlock()],
       fieldset: 'intro',
-      validation: (rule) => rule.required().error('Escribe el texto de presentación'),
+      validation: (rule) => [
+        rule.required().error('Escribe el texto de presentación'),
+        editorialTextNotBlank(rule, 'El texto de presentación está vacío: escribe al menos una frase.'),
+      ],
     }),
     defineField({
       name: 'introLinkLabel',
