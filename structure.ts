@@ -1,11 +1,12 @@
 import {CogIcon} from '@sanity/icons/Cog'
+import {DocumentTextIcon} from '@sanity/icons/DocumentText'
 import {HomeIcon} from '@sanity/icons/Home'
 import {PackageIcon} from '@sanity/icons/Package'
 import {TagIcon} from '@sanity/icons/Tag'
 import {TagsIcon} from '@sanity/icons/Tags'
 import type {StructureBuilder, StructureResolver} from 'sanity/structure'
 
-export const SINGLETON_TYPES = new Set(['homePage', 'siteSettings'])
+export const SINGLETON_TYPES = new Set(['homePage', 'projectPage', 'siteSettings'])
 
 const singleton = (S: StructureBuilder, typeName: string, title: string, icon: typeof HomeIcon) =>
   S.listItem()
@@ -49,6 +50,7 @@ export const structure: StructureResolver = (S) =>
 
       S.divider().title('Web'),
       singleton(S, 'homePage', 'Página de inicio', HomeIcon),
+      singleton(S, 'projectPage', 'Proyecto', DocumentTextIcon),
 
       S.divider().title('Configuración'),
       singleton(S, 'siteSettings', 'Ajustes del sitio', CogIcon),

@@ -27,14 +27,15 @@ Los schemas se definen en `schemaTypes/` y se exportan desde `schemaTypes/index.
 | `product` | documento | `title`, `slug`, `visible`, `category` → `category`, `tags[]` → `tag`, `shortDescription`, `description`, `cardImage?`, `images[]` (≥1), `pricing`, `availability`, `sku?`, `variants[]?` |
 | `category` | documento | Categoría principal (una por producto) |
 | `tag` | documento | Etiquetas editoriales reutilizables (no repiten formato/color/acabado) |
-| `homePage` | documento singleton | `featuredProducts[]` → `product` (orden = orden en la web, sin duplicados, solo publicados y visibles) |
-| `siteSettings` | documento singleton | `contactEmail`, `socialLinks[]` |
+| `homePage` | documento singleton | Introducción: `introHeading`, `introText` (texto editorial), `introLinkLabel` (el destino /proyecto lo fija la web) · `featuredProducts[]` → `product` (orden = orden en la web, sin duplicados, solo publicados y visibles) |
+| `projectPage` | documento singleton | `lead` (texto editorial, 1 párrafo), `headline`, `body` (texto editorial), `quote?`, `principles[]` {`title`, `text?`} |
+| `siteSettings` | documento singleton | `pricingExplanation` (texto editorial con viñetas; sin importes), `contactEmail`, `socialLinks[]` |
 | `productVariant` | objeto | `format`, `colour`, `finish` (texto libre, al menos uno), `sku?`, `hasOwnImages` + `images[]`, `hasOwnPricing` + `pricing`, `availability` (`inherit` por defecto) |
 | `pricing` | objeto | `minimumPrice` > 0, `recommendedPrice` ≥ mínimo, `supportPrice` ≥ recomendado (EUR, 2 decimales) |
 | `galleryImage` | objeto (imagen) | hotspot; `alt` obligatorio cuando hay imagen (una imagen opcional puede quedar vacía) |
 | `socialLink` | objeto | `platform`, `url` (https) |
 
-Navegación del Studio: **Tienda** (Productos, Categorías, Etiquetas) · **Web** (Página de inicio) · **Configuración** (Ajustes del sitio). `homePage` y `siteSettings` son singletons: no se pueden crear, duplicar ni borrar. La herramienta Vision (GROQ) solo aparece en local.
+Navegación del Studio: **Tienda** (Productos, Categorías, Etiquetas) · **Web** (Página de inicio, Proyecto) · **Configuración** (Ajustes del sitio). `homePage`, `projectPage` y `siteSettings` son singletons: no se pueden crear, duplicar ni borrar. La herramienta Vision (GROQ) solo aparece en local.
 
 ## Edición en el Studio (comportamiento para el editor)
 
@@ -77,5 +78,15 @@ Consulta GROQ de referencia (solo publicados):
   }
 }
 ```
+
+**Texto editorial** (`introText`, `projectPage.lead`/`body`, `pricingExplanation`): Portable Text restringido. Solo párrafos normales (y viñetas en `pricingExplanation`) y una marca semántica, **Destacado**, guardada como `em`; la web la pinta con el color de acento (como el `<em>` actual de la intro y de "Somos *Encrudo*"). Sin colores, tamaños, enlaces ni bloques de maquetación: tipografía, colores y layout siguen en el frontend. Los saltos de línea suaves (Mayús+Intro) llegan como `\n` dentro del texto. Las imágenes de Proyecto (cabecera, retrato, paisaje) siguen en el frontend.
+
+Textos de la web:
+```groq
+*[_id == "homePage"][0]{introHeading, introText, introLinkLabel}
+*[_id == "projectPage"][0]{lead, headline, body, quote, principles[]{title, text}}
+*[_id == "siteSettings"][0]{pricingExplanation}
+```
+`pricingExplanation` es texto común; los importes (mínimo, recomendado, apoyo) salen siempre del producto o la versión, y Stripe validará el mínimo en servidor. Nota: el frontend actual etiqueta el recomendado como "Sugerido".
 
 Destacados de la home: `*[_id == "homePage"][0].featuredProducts[]->[visible != false]{...}` (las referencias apuntan a productos, no a versiones).

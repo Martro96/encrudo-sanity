@@ -1,6 +1,7 @@
 import {category} from './documents/category'
 import {homePage} from './documents/homePage'
 import {product} from './documents/product'
+import {projectPage} from './documents/projectPage'
 import {siteSettings} from './documents/siteSettings'
 import {tag} from './documents/tag'
 import {galleryImage} from './objects/galleryImage'
@@ -13,6 +14,7 @@ export const schemaTypes = [
   category,
   tag,
   homePage,
+  projectPage,
   siteSettings,
   productVariant,
   pricing,

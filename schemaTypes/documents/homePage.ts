@@ -1,5 +1,7 @@
 import {HomeIcon} from '@sanity/icons/Home'
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {EDITORIAL_HELP, editorialBlock} from '../lib/editorialText'
+import {trimmedString} from '../lib/validation'
 
 type Ref = {_ref?: string}
 
@@ -8,7 +10,40 @@ export const homePage = defineType({
   title: 'Página de inicio',
   type: 'document',
   icon: HomeIcon,
+  fieldsets: [
+    {
+      name: 'intro',
+      title: 'Introducción',
+      description: 'Texto que aparece justo debajo de la imagen de cabecera.',
+    },
+  ],
   fields: [
+    defineField({
+      name: 'introHeading',
+      title: 'Título',
+      description: 'Ej.: "Encrudo se mueve".',
+      type: 'string',
+      fieldset: 'intro',
+      validation: (rule) => [rule.required().error('Escribe el título'), rule.max(60), trimmedString(rule)],
+    }),
+    defineField({
+      name: 'introText',
+      title: 'Texto',
+      description: `Párrafo de presentación. ${EDITORIAL_HELP}`,
+      type: 'array',
+      of: [editorialBlock()],
+      fieldset: 'intro',
+      validation: (rule) => rule.required().error('Escribe el texto de presentación'),
+    }),
+    defineField({
+      name: 'introLinkLabel',
+      title: 'Texto del enlace a Proyecto',
+      description: 'Texto del enlace que lleva a la página Proyecto (ej.: "Más sobre Encrudo"). El destino no se cambia aquí.',
+      type: 'string',
+      fieldset: 'intro',
+      initialValue: 'Más sobre Encrudo',
+      validation: (rule) => [rule.required().error('Escribe el texto del enlace'), rule.max(40), trimmedString(rule)],
+    }),
     defineField({
       name: 'featuredProducts',
       title: 'Productos destacados',

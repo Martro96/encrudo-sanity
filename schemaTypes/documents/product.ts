@@ -92,7 +92,7 @@ export const product = defineType({
     defineField({
       name: 'shortDescription',
       title: 'Descripción corta',
-      description: 'Una o dos frases que se muestran en las tarjetas del catálogo. Máximo 200 caracteres.',
+      description: 'Una o dos frases que se ven en las tarjetas de la tienda y de la página de inicio. Máximo 200 caracteres.',
       type: 'text',
       rows: 2,
       group: 'info',
@@ -101,7 +101,7 @@ export const product = defineType({
     defineField({
       name: 'description',
       title: 'Descripción completa',
-      description: 'Texto completo que aparece en la ficha del producto.',
+      description: 'Texto que se ve en la página del producto (la que se abre al pulsar la tarjeta).',
       type: 'array',
       group: 'info',
       of: [

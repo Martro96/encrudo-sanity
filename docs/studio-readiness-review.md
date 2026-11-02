@@ -182,3 +182,22 @@ Run these on the `studio-ux-refinements` branch with the `development` dataset o
    - Página de inicio: remove a product from the list without publishing, then try to delete that product: it is still blocked;
    - publish Página de inicio, then try again: the deletion is now allowed.
 10. **Código interno:** leave it empty on the product and on a version, and check that it publishes without errors. The label reads "Código interno" / "Código interno de esta versión".
+
+### 3c. Editorial content (manual UAT — not executed by Devin)
+Use the `development` dataset only.
+1. **Navigation:** Web shows Página de inicio and Proyecto; there is no Puntos de venta. Proyecto cannot be created from "+", duplicated or deleted (only Publicar / Descartar cambios / Restaurar).
+2. **Página de inicio · Introducción:**
+   - fill in Título ("Encrudo se mueve"), Texto and Texto del enlace (prefilled "Más sobre Encrudo");
+   - in Texto, select "cuadernos artesanales" and apply Destacado; the toolbar offers only Destacado (no colours, headings, links or lists);
+   - Mayús+Intro creates a line break inside the paragraph;
+   - leaving Título or Texto empty blocks Publicar; Productos destacados still works as before.
+3. **Proyecto:**
+   - fill in Frase de entrada (with "Encrudo" Destacado), Titular, Texto (2 paragraphs), Cita and the 7 Principios (Primera frase + Continuación), and reorder Principios by dragging;
+   - a second paragraph in Frase de entrada is rejected;
+   - the document is titled "Proyecto" before and after publishing.
+4. **Ajustes del sitio · Explicación del rango de precio:**
+   - write a text that mentions precio mínimo / recomendado / de apoyo and choosing how much to pay, using a bullet list and Destacado;
+   - the help text says not to enter amounts here;
+   - empty blocks Publicar.
+5. **Product description:** Descripción corta's help mentions the shop and homepage cards, and Descripción completa's help mentions the product page. There is no new description field.
+
