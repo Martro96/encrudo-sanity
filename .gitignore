@@ -5,11 +5,10 @@
 /dist
 /.sanity
 
-# Environment
+# Environment (never commit secrets)
 .env
-.env.local
-.env.development
-.env.production
+.env.*
+!.env.example
 
 # Misc
 *.log
