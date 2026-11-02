@@ -1,4 +1,4 @@
-import {defineConfig, isDev} from 'sanity'
+import {defineConfig, defineLocaleResourceBundle, isDev} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
 import {esESLocale} from '@sanity/locale-es-es'
@@ -24,6 +24,18 @@ export default defineConfig({
     // GROQ query tool: only for local development, hidden in the deployed Studio.
     ...(isDev ? [visionTool()] : []),
   ],
+
+  i18n: {
+    bundles: [
+      // Unpublished documents are titled "Nuevo <tipo>" by default, which is ungrammatical for
+      // feminine types and confusing for singletons ("Nuevo Página de inicio"). Show the type only.
+      defineLocaleResourceBundle({
+        locale: 'es-ES',
+        namespace: 'structure',
+        resources: {'panes.document-header-title.new.text': '{{schemaType}}'},
+      }),
+    ],
+  },
 
   schema: {
     types: schemaTypes,

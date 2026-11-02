@@ -115,18 +115,38 @@ Observed: `http://localhost:3333` is allowed **with credentials** (Sanity defaul
 5. Decide whether to align local `sanity` with the auto-update runtime before `sanity deploy`.
 
 ## 3. Manual UAT checklist (development dataset)
-1. Navigation: Tienda / Web / Configuración. The singletons don't appear in the "+" menu and can't be duplicated or deleted.
-2. Create "UAT TEST" category and tag.
-3. Create "UAT TEST" product with category, tag, card image, texts and two variants with different galleries, prices and availability. Check that each of these blocks publishing:
+Updated for the product-first editor. Use the `development` dataset only (`SANITY_STUDIO_DATASET=development npm run dev`) and prefix test content with "UAT TEST".
+1. **Navigation:**
+   - Tienda / Web / Configuración.
+   - Singletons are not in the "+" menu and can't be duplicated or deleted.
+   - Before the first publish, Página de inicio is titled "Página de inicio", not "Nuevo Página de inicio".
+2. Create a "UAT TEST" category and tag.
+3. **Simple product** (no versions):
+   - fill in name, slug, category, Galería principal (1 photo with alt), prices and availability;
+   - it publishes with no "Versiones" at all;
+   - leaving "Imagen principal para catálogo" empty gives **no** error;
+   - uploading one without alt text gives an error.
+4. **Product with versions:** set a product gallery and prices, then add:
+   - **A5 · Negro:** inherits everything;
+   - **A5 · Rojo:** "usa fotos diferentes" with its own photos;
+   - **A4 · Negro:** "tiene precios diferentes".
+   Check that:
+   - the previews say "fotos del producto / fotos propias / precios propios";
+   - switching an override off hides its fields and doesn't block publishing;
+   - a duplicate version ("a5"/"negro") is rejected;
+   - versions that mix only-colour and only-format show a warning.
+5. **Pricing:** each of these blocks publishing on both the product and a version with its own prices:
    - min 0;
    - recommended < min;
    - support < recommended;
-   - a duplicate variant ("a5"/"negro" vs "A5"/"Negro");
-   - missing alt text.
-   Also check the visibility toggle and the previews.
-4. Create one hidden product and one draft-only product. In Página de inicio:
+   - 3 decimals.
+6. **Página de inicio:**
    - add visible products and reorder them by drag;
-   - check duplicates are prevented;
-   - check the hidden and draft products are not offered.
-5. Ajustes del sitio: check an invalid email, a non-https URL, a TikTok + instagram.com warning and a duplicate platform. Then discard the changes.
-6. Cleanup: remove the homepage references, delete all UAT TEST documents, and delete the uploaded test assets from the media.
+   - duplicates are prevented;
+   - hidden and draft-only products are not offered;
+   - previews use the catalogue image or, failing that, the first gallery photo.
+7. **Ajustes del sitio:** check an invalid email, a non-https URL, a TikTok + instagram.com warning and a duplicate platform. Then discard the changes.
+8. **Cleanup:**
+   - remove the homepage references;
+   - delete all UAT TEST documents, including any created with the old variant structure, which will now show validation errors;
+   - delete the uploaded test assets.
