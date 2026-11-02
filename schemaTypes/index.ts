@@ -1,4 +1,5 @@
 import {category} from './documents/category'
+import {homePage} from './documents/homePage'
 import {product} from './documents/product'
 import {siteSettings} from './documents/siteSettings'
 import {tag} from './documents/tag'
@@ -11,6 +12,7 @@ export const schemaTypes = [
   product,
   category,
   tag,
+  homePage,
   siteSettings,
   productVariant,
   pricing,
