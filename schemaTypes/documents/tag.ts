@@ -1,5 +1,7 @@
 import {TagIcon} from '@sanity/icons/Tag'
 import {defineField, defineType} from 'sanity'
+import {AutoSlugInput} from '../components/AutoSlugInput'
+import {SLUG_MAX_LENGTH, slugFormat, slugify} from '../lib/slug'
 import {trimmedString} from '../lib/validation'
 
 export const tag = defineType({
@@ -17,11 +19,12 @@ export const tag = defineType({
     }),
     defineField({
       name: 'slug',
-      title: 'Dirección web (slug)',
-      description: 'Pulsa "Generar" para crearla a partir del nombre.',
+      title: 'Dirección web',
+      description: 'Se crea sola a partir del nombre mientras no se haya publicado. Después ya no cambia, para no romper enlaces; puedes editarla si lo necesitas.',
       type: 'slug',
-      options: {source: 'title', maxLength: 96},
-      validation: (rule) => rule.required().error('Genera la dirección web a partir del nombre'),
+      options: {source: 'title', maxLength: SLUG_MAX_LENGTH, slugify},
+      components: {input: AutoSlugInput},
+      validation: (rule) => [rule.required().error('Escribe el nombre para crear la dirección web'), slugFormat(rule)],
     }),
   ],
   preview: {select: {title: 'title', subtitle: 'slug.current'}},

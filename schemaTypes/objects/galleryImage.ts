@@ -1,5 +1,6 @@
 import {ImageIcon} from '@sanity/icons/Image'
 import {defineField, defineType} from 'sanity'
+import {ImageSavedNotice} from '../components/ImageSavedNotice'
 import {isInactiveVariantOverride, trimmedString} from '../lib/validation'
 
 type ImageValue = {asset?: unknown}
@@ -10,27 +11,36 @@ export const galleryImage = defineType({
   type: 'image',
   icon: ImageIcon,
   description:
-    'Puedes elegir el punto de interés (hotspot) para que el recorte no corte lo importante. Si subes la misma imagen varias veces, Sanity la guarda solo una vez.',
+    'Cuando la imagen aparece aquí, ya está subida y guardada en el borrador. Puedes marcar el punto de interés para que los recortes no corten lo importante.',
   options: {hotspot: true},
   fields: [
     defineField({
       name: 'alt',
       title: 'Texto alternativo',
       description:
-        'Describe brevemente lo que se ve. Lo leen las personas que usan lectores de pantalla y los buscadores. Ej.: "Fanzine Blanco y Negro A5, portada en tinta roja".',
+        'Describe brevemente lo que se ve. Este texto lo utilizan los lectores de pantalla y los buscadores. Ej.: «Fanzine Blanco y Negro A5, portada en tinta roja».',
       type: 'string',
+      components: {field: ImageSavedNotice},
       // Required only once an image has been uploaded, so optional images can stay empty.
       validation: (rule) => [
         rule.custom((alt, context) => {
           if (isInactiveVariantOverride(context)) return true
           const hasAsset = Boolean((context.parent as ImageValue | undefined)?.asset)
-          return hasAsset && !alt ? 'Escribe un texto alternativo para la imagen' : true
+          return hasAsset && !alt ? 'Imagen subida · falta el texto alternativo' : true
         }),
         rule.max(160),
         trimmedString(rule),
       ],
     }),
   ],
+  preview: {
+    select: {alt: 'alt', media: 'asset'},
+    prepare: ({alt, media}) => ({
+      title: media ? (alt ? 'Imagen lista' : 'Falta texto alternativo') : 'Sin imagen',
+      subtitle: media ? alt : 'Sube una imagen o quita este hueco',
+      media,
+    }),
+  },
 })
 
 /** Validation for a gallery (array of galleryImage): at least one photo and no empty slots. */

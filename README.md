@@ -36,6 +36,16 @@ Los schemas se definen en `schemaTypes/` y se exportan desde `schemaTypes/index.
 
 Navegación del Studio: **Tienda** (Productos, Categorías, Etiquetas) · **Web** (Página de inicio) · **Configuración** (Ajustes del sitio). `homePage` y `siteSettings` son singletons: no se pueden crear, duplicar ni borrar. La herramienta Vision (GROQ) solo aparece en local.
 
+## Edición en el Studio (comportamiento para el editor)
+
+- **Flujo simple:** editar → borrador guardado solo → Publicar → web. Releases y borradores programados están desactivados (`releases.enabled = false`, `scheduledDrafts.enabled = false`). El selector global se llama "Vista de trabajo" (lo que editas, con borradores) / "Web publicada" (override de locale `es-ES`, namespace `studio`).
+- **Borrador y Publicar:** todo cambio se guarda solo como borrador. La web (y las referencias, p. ej. para poder borrar un producto quitado de la home) solo cambia al pulsar **Publicar**. Un distintivo "Sin publicar" / "Cambios sin publicar" aparece en la cabecera del documento mientras haya un borrador. No hay auto-publicación.
+- **Dirección web (slug):** en productos, categorías y etiquetas se rellena sola desde el nombre (minúsculas, sin acentos, guiones; máx. 96) mientras el documento **no se haya publicado nunca** y el editor no la haya personalizado. Tras publicar ya no cambia al renombrar; sigue siendo editable a mano. Implementado con un input ligero (`schemaTypes/components/AutoSlugInput.tsx`) sobre el campo nativo.
+- **Etiquetas:** el selector no ofrece etiquetas ya añadidas; `unique()` sigue como segunda protección.
+- **Galerías:** se pueden arrastrar varias imágenes a la vez sobre la galería (nativo) o usar "Seleccionar varias imágenes"; "Añadir otra imagen" añade una sola. La primera es la principal y se reordenan arrastrando. Una imagen sin texto alternativo muestra "Imagen subida · falta el texto alternativo". Los botones vienen de `schemaTypes/components/GalleryArrayInput.tsx`, que solo sustituye la barra de acciones de la lista y sube con el mismo mecanismo que el arrastrar-y-soltar nativo.
+- **Estado de cada imagen:** la lista muestra "Imagen lista" / "Falta texto alternativo" (preview de `galleryImage`), y encima de los botones un resumen ("3 imágenes subidas · 1 sin texto alternativo. Los cambios se guardan automáticamente como borrador."). El editor nativo de la imagen se mantiene; encima del texto alternativo, un aviso verde (`ImageSavedNotice`, solo con imagen subida) dice "Imagen guardada automáticamente · cierra esta ventana con la X · no necesitas pulsar «Publicar» para guardar la imagen", y debajo va la ayuda del texto alternativo en estilo discreto. Sin botón Guardar extra.
+- **Código interno** (`sku`): opcional, en producto y versión; no se muestra en la web.
+
 ## Producto y versiones (contrato para frontend y Stripe)
 
 - **Producto sin versiones** (`variants` vacío): el producto es lo que se vende. Su `images`, `pricing` y `availability` son los valores definitivos.
