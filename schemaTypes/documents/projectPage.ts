@@ -1,6 +1,6 @@
 import {DocumentTextIcon} from '@sanity/icons/DocumentText'
 import {defineField, defineType} from 'sanity'
-import {EDITORIAL_HELP, editorialBlock} from '../lib/editorialText'
+import {EDITORIAL_HELP, editorialBlock, editorialTextNotBlank} from '../lib/editorialText'
 import {trimmedString} from '../lib/validation'
 
 export const projectPage = defineType({
@@ -15,7 +15,10 @@ export const projectPage = defineType({
       description: `Primera frase pequeña de la página (ej.: "Somos Encrudo, un proyecto personal y artesanal."). ${EDITORIAL_HELP}`,
       type: 'array',
       of: [editorialBlock()],
-      validation: (rule) => rule.required().max(1).error('Escribe una sola frase de entrada'),
+      validation: (rule) => [
+        rule.required().max(1).error('Escribe una sola frase de entrada'),
+        editorialTextNotBlank(rule, 'La frase de entrada está vacía: escribe una frase.'),
+      ],
     }),
     defineField({
       name: 'headline',
@@ -31,7 +34,10 @@ export const projectPage = defineType({
       description: `Párrafos que siguen al titular. ${EDITORIAL_HELP}`,
       type: 'array',
       of: [editorialBlock()],
-      validation: (rule) => rule.required().error('Escribe al menos un párrafo'),
+      validation: (rule) => [
+        rule.required().error('Escribe al menos un párrafo'),
+        editorialTextNotBlank(rule, 'El texto está vacío: escribe al menos un párrafo.'),
+      ],
     }),
     defineField({
       name: 'quote',
