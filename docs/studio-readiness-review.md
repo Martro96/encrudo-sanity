@@ -192,7 +192,8 @@ Use the `development` dataset only.
    - Mayús+Intro creates a line break inside the paragraph;
    - leaving Título or Texto empty blocks Publicar; Productos destacados still works as before.
 3. **Proyecto:**
-   - fill in Frase de entrada (with "Encrudo" Destacado), Titular, Texto (2 paragraphs), Cita and the 7 Principios (Primera frase + Continuación), and reorder Principios by dragging;
+   - fill in Frase de entrada (with "Encrudo" Destacado), Titular, Texto (2 paragraphs) and Cita; there is no Principios field (the approved design dropped the list);
+   - if the `development` Proyecto still has Principios from earlier UAT, Sanity shows an unknown-field notice for `principles`: remove it from there and publish;
    - a second paragraph in Frase de entrada is rejected;
    - the document is titled "Proyecto" before and after publishing.
 4. **Ajustes del sitio · Explicación del rango de precio:**

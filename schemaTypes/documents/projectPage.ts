@@ -1,5 +1,5 @@
 import {DocumentTextIcon} from '@sanity/icons/DocumentText'
-import {defineArrayMember, defineField, defineType} from 'sanity'
+import {defineField, defineType} from 'sanity'
 import {EDITORIAL_HELP, editorialBlock} from '../lib/editorialText'
 import {trimmedString} from '../lib/validation'
 
@@ -39,37 +39,6 @@ export const projectPage = defineType({
       description: 'Frase destacada en grande, sin comillas (la web las añade).',
       type: 'string',
       validation: (rule) => [rule.max(140), trimmedString(rule)],
-    }),
-    defineField({
-      name: 'principles',
-      title: 'Principios',
-      description: 'Lista de ideas que definen Encrudo, en el orden en que aparecen. Arrastra para reordenarlas.',
-      type: 'array',
-      of: [
-        defineArrayMember({
-          type: 'object',
-          name: 'principle',
-          title: 'Principio',
-          fields: [
-            defineField({
-              name: 'title',
-              title: 'Primera frase',
-              description: 'Ej.: "Creamos a mano, con oficio y tiempo."',
-              type: 'string',
-              validation: (rule) => [rule.required().error('Escribe la primera frase'), trimmedString(rule)],
-            }),
-            defineField({
-              name: 'text',
-              title: 'Continuación',
-              description: 'Opcional. Ej.: "Cada pieza es única."',
-              type: 'text',
-              rows: 2,
-              validation: (rule) => trimmedString(rule),
-            }),
-          ],
-          preview: {select: {title: 'title', subtitle: 'text'}},
-        }),
-      ],
     }),
   ],
   preview: {prepare: () => ({title: 'Proyecto'})},
