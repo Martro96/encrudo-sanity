@@ -27,7 +27,7 @@ Los schemas se definen en `schemaTypes/` y se exportan desde `schemaTypes/index.
 | `product` | documento | `title`, `slug`, `visible`, `category` → `category`, `tags[]` → `tag`, `shortDescription`, `description`, `cardImage?`, `images[]` (≥1), `pricing`, `availability`, `sku?`, `variants[]?` |
 | `category` | documento | Categoría principal (una por producto) |
 | `tag` | documento | Etiquetas editoriales reutilizables (no repiten formato/color/acabado) |
-| `homePage` | documento singleton | Introducción: `introHeading`, `introText` (texto editorial), `introLinkLabel` (el destino /proyecto lo fija la web) · `featuredProducts[]` → `product` (orden = orden en la web, sin duplicados, solo publicados y visibles) |
+| `homePage` | documento singleton | Introducción: `introHeading`, `introText` (texto editorial), `introLinkLabel` (el destino /proyecto lo fija la web) · `featuredProducts[]` de `featuredProduct` = `{product → product, variantKey?}` (orden = orden en la web, solo productos publicados y visibles; un producto solo se repite con versiones distintas) |
 | `projectPage` | documento singleton | `lead` (texto editorial, 1 párrafo), `headline`, `body` (texto editorial), `quote?`, `principles[]` {`title`, `text?`} |
 | `siteSettings` | documento singleton | `pricingExplanation` (texto editorial con viñetas; sin importes), `contactEmail`, `socialLinks[]` |
 | `productVariant` | objeto | `format`, `colour`, `finish` (texto libre, al menos uno), `sku?`, `hasOwnImages` + `images[]`, `hasOwnPricing` + `pricing`, `availability` (`inherit` por defecto) |
@@ -89,4 +89,40 @@ Textos de la web:
 ```
 `pricingExplanation` es texto común; los importes (mínimo, recomendado, apoyo) salen siempre del producto o la versión, y Stripe validará el mínimo en servidor. Nota: el frontend actual etiqueta el recomendado como "Sugerido".
 
-Destacados de la home: `*[_id == "homePage"][0].featuredProducts[]->[visible != false]{...}` (las referencias apuntan a productos, no a versiones).
+**Destacados de la home** (`homePage.featuredProducts[]`, tipo `featuredProduct`):
+
+- `product`: referencia al producto (obligatoria). El producto sigue siendo la entidad principal; las versiones siguen embebidas en él.
+- `variantKey` (opcional): el `_key` del elemento de `product.variants[]` que se quiere destacar. Nunca la posición ni la etiqueta. El selector del Studio solo lista las versiones **publicadas** del producto elegido; si se cambia de producto y la versión no existe en el nuevo, se vacía. Si una versión destacada se borra después del producto, la validación lo marca ("La versión seleccionada ya no existe en este producto…").
+- **Sin versión:** la tarjeta usa los valores del producto: imagen `cardImage` → `images[0]`, `pricing`, `availability`.
+- **Con versión:** usa los valores efectivos de esa versión: imagen = `images[0]` de la versión si `hasOwnImages`, si no `cardImage` → `images[0]` del producto; precio = `pricing` de la versión si `hasOwnPricing`, si no el del producto; disponibilidad = la de la versión salvo `inherit`, si no la del producto. Si `variantKey` ya no existe, la web cae al producto principal.
+- **Enlace:** siempre a la ficha del producto (`slug`). La integración del frontend debe conservar `variantKey` en el enlace para poder preseleccionar esa versión en la ficha; el formato (query string, estado, etc.) lo decidirá el frontend, Sanity no lo fija.
+
+```groq
+*[_id == "homePage"][0].featuredProducts[product->visible != false]{
+  _key, variantKey,
+  "product": product->{_id, title, "slug": slug.current, shortDescription},
+  "variant": product->variants[_key == ^.variantKey][0]{
+    _key, format, colour, finish,
+    "label": array::join(array::compact([format, colour, finish]), " · ")
+  },
+  "image": coalesce(
+    product->variants[_key == ^.variantKey && hasOwnImages == true][0].images[0],
+    product->cardImage, product->images[0]),
+  "pricing": coalesce(
+    product->variants[_key == ^.variantKey && hasOwnPricing == true][0].pricing,
+    product->pricing),
+  "availability": coalesce(
+    product->variants[_key == ^.variantKey && availability != "inherit"][0].availability,
+    product->availability)
+}
+```
+
+**Cambio de forma de `featuredProducts`:** antes era un array de referencias (`{_type: "reference", _ref}`), ahora es un array de `featuredProduct`. `production` no tiene contenido. Si `development` tiene una Página de inicio con destacados del formato anterior, el Studio los marca como error; para convertirlos (conserva `_key`, orden y producto, sin versión):
+
+```bash
+npx sanity login   # tu propia sesión, sin tokens compartidos
+npx sanity migration run featured-products-items --dataset development              # simulación
+npx sanity migration run featured-products-items --dataset development --no-dry-run # aplica
+```
+
+También vale quitar esos elementos y volver a añadir los productos a mano.
