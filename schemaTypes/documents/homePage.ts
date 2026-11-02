@@ -13,7 +13,7 @@ export const homePage = defineType({
       name: 'featuredProducts',
       title: 'Productos destacados',
       description:
-        'Productos que se muestran destacados en la página de inicio. El orden de esta lista es el orden en que aparecen en la web: arrastra para reordenarlos. Solo se pueden elegir productos publicados y visibles en el catálogo, y cada uno una sola vez.',
+        'Productos que se muestran destacados en la página de inicio. El orden de esta lista es el orden en que aparecen en la web: arrastra para reordenarlos. Solo se pueden elegir productos publicados y visibles en el catálogo, y cada uno una sola vez. Los cambios se guardan como borrador automáticamente. Pulsa Publicar para aplicarlos a la web y liberar referencias eliminadas (por ejemplo, para poder borrar un producto que has quitado de esta lista).',
       type: 'array',
       of: [
         defineArrayMember({
