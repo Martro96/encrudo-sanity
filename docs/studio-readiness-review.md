@@ -170,8 +170,10 @@ Run these on the `studio-ux-refinements` branch with the `development` dataset o
    - each image in the list shows "Imagen lista" or "Falta texto alternativo";
    - an image without alt text blocks Publicar.
 7. **Image editor:**
-   - after an upload, open the image: the Texto alternativo help says "Imagen subida. Los cambios se guardan automáticamente… cierra la imagen con la X";
-   - add the alt text, close with X, and the item now shows "Imagen lista".
+   - after an upload, open the image. Above Texto alternativo there is a green callout: "✓ Imagen guardada automáticamente", "Cuando termines, cierra esta ventana con la X.", "No necesitas pulsar «Publicar» para guardar la imagen."
+   - the callout is clearly stronger than the alt-text help below it (smaller, muted);
+   - the callout is not shown on an empty image slot;
+   - add the alt text, close with X, and the item now shows "Imagen lista"; there is no extra Save button.
 8. **Order:** drag images to reorder them. The first one is the main image, and the card preview uses it when there is no catálogo image.
 9. **Draft vs Publish:**
    - the global switch at the top reads "Vista de trabajo" / "Web publicada", not "Borradores";

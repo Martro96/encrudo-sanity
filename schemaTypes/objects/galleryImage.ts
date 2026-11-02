@@ -1,5 +1,6 @@
 import {ImageIcon} from '@sanity/icons/Image'
 import {defineField, defineType} from 'sanity'
+import {ImageSavedNotice} from '../components/ImageSavedNotice'
 import {isInactiveVariantOverride, trimmedString} from '../lib/validation'
 
 type ImageValue = {asset?: unknown}
@@ -17,8 +18,9 @@ export const galleryImage = defineType({
       name: 'alt',
       title: 'Texto alternativo',
       description:
-        'Imagen subida. Los cambios se guardan automáticamente. Describe brevemente lo que se ve (lo leen los lectores de pantalla y los buscadores), ej.: "Fanzine Blanco y Negro A5, portada en tinta roja". Cuando termines, cierra la imagen con la X: no se pierde nada.',
+        'Describe brevemente lo que se ve. Este texto lo utilizan los lectores de pantalla y los buscadores. Ej.: «Fanzine Blanco y Negro A5, portada en tinta roja».',
       type: 'string',
+      components: {field: ImageSavedNotice},
       // Required only once an image has been uploaded, so optional images can stay empty.
       validation: (rule) => [
         rule.custom((alt, context) => {
