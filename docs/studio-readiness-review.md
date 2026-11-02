@@ -190,16 +190,17 @@ Use the `development` dataset only.
    - fill in Título ("Encrudo se mueve"), Texto and Texto del enlace (prefilled "Más sobre Encrudo");
    - in Texto, select "cuadernos artesanales" and apply Destacado; the toolbar offers only Destacado (no colours, headings, links or lists);
    - Mayús+Intro creates a line break inside the paragraph;
-   - leaving Título or Texto empty blocks Publicar; Productos destacados still works as before.
+   - leaving Título or Texto empty blocks Publicar; deleting every character of Texto (leaving an empty paragraph) also blocks it with "El texto de presentación está vacío…"; Productos destacados still works as before.
 3. **Proyecto:**
    - fill in Frase de entrada (with "Encrudo" Destacado), Titular, Texto (2 paragraphs) and Cita; there is no Principios field (the approved design dropped the list);
+   - deleting every character of Frase de entrada or Texto blocks Publicar ("…está vacía…" / "El texto está vacío…");
    - if the `development` Proyecto still has Principios from earlier UAT, Sanity shows an unknown-field notice for `principles`: remove it from there and publish;
    - a second paragraph in Frase de entrada is rejected;
    - the document is titled "Proyecto" before and after publishing.
 4. **Ajustes del sitio · Explicación del rango de precio:**
    - write a text that mentions precio mínimo / recomendado / de apoyo and choosing how much to pay, using a bullet list and Destacado;
    - the help text says not to enter amounts here;
-   - empty blocks Publicar.
+   - empty blocks Publicar, including a paragraph or bullet with no visible text.
 5. **Product description:** Descripción corta's help mentions the shop and homepage cards, and Descripción completa's help mentions the product page. There is no new description field.
 
 ### 3d. Homepage featured product or version (manual UAT — not executed by Devin)

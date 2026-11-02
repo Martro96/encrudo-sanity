@@ -1,6 +1,6 @@
 import {CogIcon} from '@sanity/icons/Cog'
 import {defineArrayMember, defineField, defineType} from 'sanity'
-import {EDITORIAL_HELP, editorialBlock} from '../lib/editorialText'
+import {EDITORIAL_HELP, editorialBlock, editorialTextNotBlank} from '../lib/editorialText'
 
 export const siteSettings = defineType({
   name: 'siteSettings',
@@ -14,7 +14,10 @@ export const siteSettings = defineType({
       description: `Texto que ven los clientes en la ficha de producto para entender cómo funciona el precio: el precio mínimo, el recomendado, el de apoyo y que pueden elegir cuánto pagar a partir del mínimo. Es el mismo para todos los productos. No escribas importes aquí: los precios de cada producto o versión se ponen en el propio producto. ${EDITORIAL_HELP}`,
       type: 'array',
       of: [editorialBlock({bulletList: true})],
-      validation: (rule) => rule.required().error('Escribe la explicación del rango de precio'),
+      validation: (rule) => [
+        rule.required().error('Escribe la explicación del rango de precio'),
+        editorialTextNotBlank(rule, 'La explicación del rango de precio está vacía: escribe el texto.'),
+      ],
     }),
     defineField({
       name: 'contactEmail',
