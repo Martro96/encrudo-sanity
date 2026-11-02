@@ -182,3 +182,36 @@ Run these on the `studio-ux-refinements` branch with the `development` dataset o
    - Página de inicio: remove a product from the list without publishing, then try to delete that product: it is still blocked;
    - publish Página de inicio, then try again: the deletion is now allowed.
 10. **Código interno:** leave it empty on the product and on a version, and check that it publishes without errors. The label reads "Código interno" / "Código interno de esta versión".
+
+### 3c. Editorial content (manual UAT — not executed by Devin)
+Use the `development` dataset only.
+1. **Navigation:** Web shows Página de inicio and Proyecto; there is no Puntos de venta. Proyecto cannot be created from "+", duplicated or deleted (only Publicar / Descartar cambios / Restaurar).
+2. **Página de inicio · Introducción:**
+   - fill in Título ("Encrudo se mueve"), Texto and Texto del enlace (prefilled "Más sobre Encrudo");
+   - in Texto, select "cuadernos artesanales" and apply Destacado; the toolbar offers only Destacado (no colours, headings, links or lists);
+   - Mayús+Intro creates a line break inside the paragraph;
+   - leaving Título or Texto empty blocks Publicar; Productos destacados still works as before.
+3. **Proyecto:**
+   - fill in Frase de entrada (with "Encrudo" Destacado), Titular, Texto (2 paragraphs), Cita and the 7 Principios (Primera frase + Continuación), and reorder Principios by dragging;
+   - a second paragraph in Frase de entrada is rejected;
+   - the document is titled "Proyecto" before and after publishing.
+4. **Ajustes del sitio · Explicación del rango de precio:**
+   - write a text that mentions precio mínimo / recomendado / de apoyo and choosing how much to pay, using a bullet list and Destacado;
+   - the help text says not to enter amounts here;
+   - empty blocks Publicar.
+5. **Product description:** Descripción corta's help mentions the shop and homepage cards, and Descripción completa's help mentions the product page. There is no new description field.
+
+### 3d. Homepage featured product or version (manual UAT — not executed by Devin)
+Use the `development` dataset only. Prepare 2 published products: "Cuaderno X" with versions "A5 · Rojo · Mate" (own photos, own prices) and "Negro" (inherits everything), and "Póster Y" with no versions.
+1. **Old data:** if Página de inicio already has featured products from before this change, they show as invalid. Run the dry run of `featured-products-items` from the README, then `--no-dry-run`; the items reappear in the same order as "Cuaderno X — Producto principal". (Or remove them and add them again.)
+2. **Add a product:** in Productos destacados, add an item. Only Producto is visible, with help "Elige el producto que quieres destacar."; drafts and hidden products are not offered.
+3. **Version selector:** pick Cuaderno X. Versión destacada appears with its help text and lists only "A5 · Rojo · Mate" and "Negro" plus "Producto principal (sin versión concreta)".
+4. **No versions:** pick Póster Y in another item. Versión destacada shows "Este producto no tiene versiones publicadas: se mostrará el producto principal." and nothing can be selected.
+5. **Preview:** the items read "Cuaderno X · A5 · Rojo · Mate — Versión destacada" (thumbnail = the red version's first photo), "Cuaderno X · Negro" (thumbnail = product image) and "Póster Y — Producto principal".
+6. **Changing product clears the version:** in the A5 · Rojo · Mate item, switch Producto to Póster Y. Versión destacada is emptied, not kept.
+7. **Obsolete version:** feature "Cuaderno X · Negro", publish the homepage, then delete the Negro version from Cuaderno X and publish the product. Back in Página de inicio, the item shows "La versión seleccionada ya no existe" in the preview and the error "La versión seleccionada ya no existe en este producto. Elige otra versión o deja el campo vacío." Choosing another version or "Producto principal" fixes it.
+8. **Duplicates:** the same product twice with no version, or the same version twice, gives "Este producto (o esta versión) ya está en la lista…". Cuaderno X as main product plus Cuaderno X · A5 · Rojo · Mate is allowed.
+9. **Product still required:** an item without Producto blocks Publicar with "Elige el producto que quieres destacar".
+10. Drag to reorder still works; hiding a featured product still gives the "ocultos en el catálogo" warning.
+11. Clean up the test products and homepage items in `development` afterwards.
+

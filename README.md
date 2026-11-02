@@ -27,14 +27,15 @@ Los schemas se definen en `schemaTypes/` y se exportan desde `schemaTypes/index.
 | `product` | documento | `title`, `slug`, `visible`, `category` → `category`, `tags[]` → `tag`, `shortDescription`, `description`, `cardImage?`, `images[]` (≥1), `pricing`, `availability`, `sku?`, `variants[]?` |
 | `category` | documento | Categoría principal (una por producto) |
 | `tag` | documento | Etiquetas editoriales reutilizables (no repiten formato/color/acabado) |
-| `homePage` | documento singleton | `featuredProducts[]` → `product` (orden = orden en la web, sin duplicados, solo publicados y visibles) |
-| `siteSettings` | documento singleton | `contactEmail`, `socialLinks[]` |
+| `homePage` | documento singleton | Introducción: `introHeading`, `introText` (texto editorial), `introLinkLabel` (el destino /proyecto lo fija la web) · `featuredProducts[]` de `featuredProduct` = `{product → product, variantKey?}` (orden = orden en la web, solo productos publicados y visibles; un producto solo se repite con versiones distintas) |
+| `projectPage` | documento singleton | `lead` (texto editorial, 1 párrafo), `headline`, `body` (texto editorial), `quote?`, `principles[]` {`title`, `text?`} |
+| `siteSettings` | documento singleton | `pricingExplanation` (texto editorial con viñetas; sin importes), `contactEmail`, `socialLinks[]` |
 | `productVariant` | objeto | `format`, `colour`, `finish` (texto libre, al menos uno), `sku?`, `hasOwnImages` + `images[]`, `hasOwnPricing` + `pricing`, `availability` (`inherit` por defecto) |
 | `pricing` | objeto | `minimumPrice` > 0, `recommendedPrice` ≥ mínimo, `supportPrice` ≥ recomendado (EUR, 2 decimales) |
 | `galleryImage` | objeto (imagen) | hotspot; `alt` obligatorio cuando hay imagen (una imagen opcional puede quedar vacía) |
 | `socialLink` | objeto | `platform`, `url` (https) |
 
-Navegación del Studio: **Tienda** (Productos, Categorías, Etiquetas) · **Web** (Página de inicio) · **Configuración** (Ajustes del sitio). `homePage` y `siteSettings` son singletons: no se pueden crear, duplicar ni borrar. La herramienta Vision (GROQ) solo aparece en local.
+Navegación del Studio: **Tienda** (Productos, Categorías, Etiquetas) · **Web** (Página de inicio, Proyecto) · **Configuración** (Ajustes del sitio). `homePage`, `projectPage` y `siteSettings` son singletons: no se pueden crear, duplicar ni borrar. La herramienta Vision (GROQ) solo aparece en local.
 
 ## Edición en el Studio (comportamiento para el editor)
 
@@ -78,4 +79,50 @@ Consulta GROQ de referencia (solo publicados):
 }
 ```
 
-Destacados de la home: `*[_id == "homePage"][0].featuredProducts[]->[visible != false]{...}` (las referencias apuntan a productos, no a versiones).
+**Texto editorial** (`introText`, `projectPage.lead`/`body`, `pricingExplanation`): Portable Text restringido. Solo párrafos normales (y viñetas en `pricingExplanation`) y una marca semántica, **Destacado**, guardada como `em`; la web la pinta con el color de acento (como el `<em>` actual de la intro y de "Somos *Encrudo*"). Sin colores, tamaños, enlaces ni bloques de maquetación: tipografía, colores y layout siguen en el frontend. Los saltos de línea suaves (Mayús+Intro) llegan como `\n` dentro del texto. Las imágenes de Proyecto (cabecera, retrato, paisaje) siguen en el frontend.
+
+Textos de la web:
+```groq
+*[_id == "homePage"][0]{introHeading, introText, introLinkLabel}
+*[_id == "projectPage"][0]{lead, headline, body, quote, principles[]{title, text}}
+*[_id == "siteSettings"][0]{pricingExplanation}
+```
+`pricingExplanation` es texto común; los importes (mínimo, recomendado, apoyo) salen siempre del producto o la versión, y Stripe validará el mínimo en servidor. Nota: el frontend actual etiqueta el recomendado como "Sugerido".
+
+**Destacados de la home** (`homePage.featuredProducts[]`, tipo `featuredProduct`):
+
+- `product`: referencia al producto (obligatoria). El producto sigue siendo la entidad principal; las versiones siguen embebidas en él.
+- `variantKey` (opcional): el `_key` del elemento de `product.variants[]` que se quiere destacar. Nunca la posición ni la etiqueta. El selector del Studio solo lista las versiones **publicadas** del producto elegido; si se cambia de producto y la versión no existe en el nuevo, se vacía. Si una versión destacada se borra después del producto, la validación lo marca ("La versión seleccionada ya no existe en este producto…").
+- **Sin versión:** la tarjeta usa los valores del producto: imagen `cardImage` → `images[0]`, `pricing`, `availability`.
+- **Con versión:** usa los valores efectivos de esa versión: imagen = `images[0]` de la versión si `hasOwnImages`, si no `cardImage` → `images[0]` del producto; precio = `pricing` de la versión si `hasOwnPricing`, si no el del producto; disponibilidad = la de la versión salvo `inherit`, si no la del producto. Si `variantKey` ya no existe, la web cae al producto principal.
+- **Enlace:** siempre a la ficha del producto (`slug`). La integración del frontend debe conservar `variantKey` en el enlace para poder preseleccionar esa versión en la ficha; el formato (query string, estado, etc.) lo decidirá el frontend, Sanity no lo fija.
+
+```groq
+*[_id == "homePage"][0].featuredProducts[product->visible != false]{
+  _key, variantKey,
+  "product": product->{_id, title, "slug": slug.current, shortDescription},
+  "variant": product->variants[_key == ^.variantKey][0]{
+    _key, format, colour, finish,
+    "label": array::join(array::compact([format, colour, finish]), " · ")
+  },
+  "image": coalesce(
+    product->variants[_key == ^.variantKey && hasOwnImages == true][0].images[0],
+    product->cardImage, product->images[0]),
+  "pricing": coalesce(
+    product->variants[_key == ^.variantKey && hasOwnPricing == true][0].pricing,
+    product->pricing),
+  "availability": coalesce(
+    product->variants[_key == ^.variantKey && availability != "inherit"][0].availability,
+    product->availability)
+}
+```
+
+**Cambio de forma de `featuredProducts`:** antes era un array de referencias (`{_type: "reference", _ref}`), ahora es un array de `featuredProduct`. `production` no tiene contenido. Si `development` tiene una Página de inicio con destacados del formato anterior, el Studio los marca como error; para convertirlos (conserva `_key`, orden y producto, sin versión):
+
+```bash
+npx sanity login   # tu propia sesión, sin tokens compartidos
+npx sanity migration run featured-products-items --dataset development              # simulación
+npx sanity migration run featured-products-items --dataset development --no-dry-run # aplica
+```
+
+También vale quitar esos elementos y volver a añadir los productos a mano.
