@@ -153,7 +153,6 @@ export const product = defineType({
       type: 'array',
       group: 'images',
       of: [defineArrayMember({type: 'galleryImage'})],
-      options: {layout: 'grid'},
       components: {input: GalleryArrayInput},
       validation: (rule) => rule.custom((images) => validateGallery(images, 'Añade al menos una foto a la galería principal')),
     }),

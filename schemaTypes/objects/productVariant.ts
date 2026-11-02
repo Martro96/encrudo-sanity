@@ -58,7 +58,6 @@ export const productVariant = defineType({
         'Se muestran en la ficha del producto cuando el cliente elige esta versión, en lugar de la galería principal. Sube o arrastra varias imágenes a la vez (también con "Seleccionar varias imágenes") y después añade el texto alternativo de cada una. La primera será la principal; arrástralas para cambiar el orden.',
       type: 'array',
       of: [{type: 'galleryImage'}],
-      options: {layout: 'grid'},
       components: {input: GalleryArrayInput},
       hidden: ({parent}) => !(parent as VariantParent | undefined)?.hasOwnImages,
       validation: (rule) =>

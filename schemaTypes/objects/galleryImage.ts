@@ -17,7 +17,7 @@ export const galleryImage = defineType({
       name: 'alt',
       title: 'Texto alternativo',
       description:
-        'Describe brevemente lo que se ve. Lo leen las personas que usan lectores de pantalla y los buscadores. Ej.: "Fanzine Blanco y Negro A5, portada en tinta roja".',
+        'Imagen subida. Los cambios se guardan automáticamente. Describe brevemente lo que se ve (lo leen los lectores de pantalla y los buscadores), ej.: "Fanzine Blanco y Negro A5, portada en tinta roja". Cuando termines, cierra la imagen con la X: no se pierde nada.',
       type: 'string',
       // Required only once an image has been uploaded, so optional images can stay empty.
       validation: (rule) => [
@@ -31,6 +31,14 @@ export const galleryImage = defineType({
       ],
     }),
   ],
+  preview: {
+    select: {alt: 'alt', media: 'asset'},
+    prepare: ({alt, media}) => ({
+      title: media ? (alt ? 'Imagen lista' : 'Falta texto alternativo') : 'Sin imagen',
+      subtitle: media ? alt : 'Sube una imagen o quita este hueco',
+      media,
+    }),
+  },
 })
 
 /** Validation for a gallery (array of galleryImage): at least one photo and no empty slots. */

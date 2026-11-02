@@ -35,8 +35,25 @@ export default defineConfig({
         namespace: 'structure',
         resources: {'panes.document-header-title.new.text': '{{schemaType}}'},
       }),
+      // The global perspective switch is not a "drafts only" filter: it is the working view where
+      // drafts take precedence over published content. Name it for what it shows.
+      defineLocaleResourceBundle({
+        locale: 'es-ES',
+        namespace: 'studio',
+        resources: {
+          'release.navbar.drafts': 'Vista de trabajo',
+          'release.chip.global.drafts': 'Vista de trabajo',
+          'release.navbar.published': 'Web publicada',
+          'release.navbar.tooltip':
+            'Vista de trabajo: lo que estás editando, con los borradores. Web publicada: lo que ve el público.',
+        },
+      }),
     ],
   },
+
+  // Edit → autosaved draft → Publicar. No release management or scheduling for this shop.
+  releases: {enabled: false},
+  scheduledDrafts: {enabled: false},
 
   schema: {
     types: schemaTypes,
