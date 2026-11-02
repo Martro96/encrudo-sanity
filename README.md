@@ -28,7 +28,7 @@ Los schemas se definen en `schemaTypes/` y se exportan desde `schemaTypes/index.
 | `category` | documento | Categoría principal (una por producto) |
 | `tag` | documento | Etiquetas editoriales reutilizables (no repiten formato/color/acabado) |
 | `homePage` | documento singleton | Introducción: `introHeading`, `introText` (texto editorial), `introLinkLabel` (el destino /proyecto lo fija la web) · `featuredProducts[]` de `featuredProduct` = `{product → product, variantKey?}` (orden = orden en la web, solo productos publicados y visibles; un producto solo se repite con versiones distintas) |
-| `projectPage` | documento singleton | `lead` (texto editorial, 1 párrafo), `headline`, `body` (texto editorial), `quote?`, `principles[]` {`title`, `text?`} |
+| `projectPage` | documento singleton | `lead` (texto editorial, 1 párrafo), `headline`, `body` (texto editorial), `quote?` |
 | `siteSettings` | documento singleton | `pricingExplanation` (texto editorial con viñetas; sin importes), `contactEmail`, `socialLinks[]` |
 | `productVariant` | objeto | `format`, `colour`, `finish` (texto libre, al menos uno), `sku?`, `hasOwnImages` + `images[]`, `hasOwnPricing` + `pricing`, `availability` (`inherit` por defecto) |
 | `pricing` | objeto | `minimumPrice` > 0, `recommendedPrice` ≥ mínimo, `supportPrice` ≥ recomendado (EUR, 2 decimales) |
@@ -79,12 +79,12 @@ Consulta GROQ de referencia (solo publicados):
 }
 ```
 
-**Texto editorial** (`introText`, `projectPage.lead`/`body`, `pricingExplanation`): Portable Text restringido. Solo párrafos normales (y viñetas en `pricingExplanation`) y una marca semántica, **Destacado**, guardada como `em`; la web la pinta con el color de acento (como el `<em>` actual de la intro y de "Somos *Encrudo*"). Sin colores, tamaños, enlaces ni bloques de maquetación: tipografía, colores y layout siguen en el frontend. Los saltos de línea suaves (Mayús+Intro) llegan como `\n` dentro del texto. Las imágenes de Proyecto (cabecera, retrato, paisaje) siguen en el frontend.
+**Texto editorial** (`introText`, `projectPage.lead`/`body`, `pricingExplanation`): Portable Text restringido. Solo párrafos normales (y viñetas en `pricingExplanation`) y una marca semántica, **Destacado**, guardada como `em`; la web la pinta con el color de acento (como el `<em>` actual de la intro y de "Somos *Encrudo*"). Sin colores, tamaños, enlaces ni bloques de maquetación: tipografía, colores y layout siguen en el frontend. Los saltos de línea suaves (Mayús+Intro) llegan como `\n` dentro del texto. Las imágenes de Proyecto siguen en el frontend.
 
 Textos de la web:
 ```groq
 *[_id == "homePage"][0]{introHeading, introText, introLinkLabel}
-*[_id == "projectPage"][0]{lead, headline, body, quote, principles[]{title, text}}
+*[_id == "projectPage"][0]{lead, headline, body, quote}
 *[_id == "siteSettings"][0]{pricingExplanation}
 ```
 `pricingExplanation` es texto común; los importes (mínimo, recomendado, apoyo) salen siempre del producto o la versión, y Stripe validará el mínimo en servidor. Nota: el frontend actual etiqueta el recomendado como "Sugerido".
