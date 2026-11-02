@@ -1,8 +1,15 @@
 import {PackageIcon} from '@sanity/icons/Package'
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {formatEuros} from '../lib/format'
 import {trimmedString} from '../lib/validation'
+import {validateGallery} from '../objects/galleryImage'
+import {AVAILABILITY, INHERIT} from '../objects/productVariant'
 
+const ATTRIBUTES = ['format', 'colour', 'finish'] as const
 type VariantValue = {format?: string; colour?: string; finish?: string; availability?: string}
+
+const attributeKey = (v: VariantValue) => ATTRIBUTES.map((a) => v[a]?.trim().toLowerCase() ?? '').join('|')
+const attributeLabel = (v: VariantValue) => ATTRIBUTES.map((a) => v[a]).filter(Boolean).join(' · ')
 
 export const product = defineType({
   name: 'product',
@@ -10,10 +17,10 @@ export const product = defineType({
   type: 'document',
   icon: PackageIcon,
   groups: [
-    {name: 'info', title: 'Información', default: true},
-    {name: 'texts', title: 'Textos'},
-    {name: 'card', title: 'Imagen de tarjeta'},
-    {name: 'variants', title: 'Variantes y precios'},
+    {name: 'info', title: 'Información del producto', default: true},
+    {name: 'images', title: 'Imágenes'},
+    {name: 'sale', title: 'Venta y disponibilidad'},
+    {name: 'variants', title: 'Versiones del producto'},
   ],
   fields: [
     defineField({
@@ -56,7 +63,8 @@ export const product = defineType({
     defineField({
       name: 'tags',
       title: 'Etiquetas',
-      description: 'Opcional. Etiquetas para ayudar a encontrar y filtrar productos. Puedes añadir varias.',
+      description:
+        'Opcional. Etiquetas para ayudar a encontrar y filtrar productos (ej.: Novedad, Edición limitada). No repitas aquí el formato, color o acabado: eso se indica en las versiones.',
       type: 'array',
       group: 'info',
       of: [defineArrayMember({type: 'reference', to: [{type: 'tag'}]})],
@@ -68,15 +76,15 @@ export const product = defineType({
       description: 'Una o dos frases que se muestran en las tarjetas del catálogo. Máximo 200 caracteres.',
       type: 'text',
       rows: 2,
-      group: 'texts',
+      group: 'info',
       validation: (rule) => [rule.max(200).error('Máximo 200 caracteres'), trimmedString(rule)],
     }),
     defineField({
       name: 'description',
-      title: 'Descripción',
+      title: 'Descripción completa',
       description: 'Texto completo que aparece en la ficha del producto.',
       type: 'array',
-      group: 'texts',
+      group: 'info',
       of: [
         defineArrayMember({
           type: 'block',
@@ -112,41 +120,95 @@ export const product = defineType({
     }),
     defineField({
       name: 'cardImage',
-      title: 'Imagen de tarjeta',
+      title: 'Imagen principal para catálogo',
       description:
-        'Opcional. Es la imagen que representa al producto en el catálogo y en los destacados de la página de inicio. Si la dejas vacía, se usará la primera foto de la primera variante. Las fotos de cada variante se añaden en "Variantes y precios".',
+        'Opcional. Representa al producto en el catálogo y en los destacados de la página de inicio. Si la dejas vacía, se usa la primera foto de la galería principal.',
       type: 'galleryImage',
-      group: 'card',
+      group: 'images',
+    }),
+    defineField({
+      name: 'images',
+      title: 'Galería principal',
+      description:
+        'Fotos del producto que se muestran en su ficha. La primera es la principal; arrastra para reordenar. Si una versión usa fotos diferentes, se añaden dentro de esa versión.',
+      type: 'array',
+      group: 'images',
+      of: [defineArrayMember({type: 'galleryImage'})],
+      options: {layout: 'grid'},
+      validation: (rule) => rule.custom((images) => validateGallery(images, 'Añade al menos una foto a la galería principal')),
+    }),
+    defineField({
+      name: 'pricing',
+      title: 'Precios',
+      description:
+        'Precios del producto. Si tiene versiones, son los precios de todas ellas salvo las que tengan "precios diferentes".',
+      type: 'pricing',
+      group: 'sale',
+      validation: (rule) => rule.required().error('Indica los precios del producto'),
+    }),
+    defineField({
+      name: 'availability',
+      title: 'Disponibilidad',
+      description:
+        'Si está agotado o próximamente, se muestra en la web pero no se puede comprar. Si tiene versiones, cada una puede indicar la suya.',
+      type: 'string',
+      group: 'sale',
+      options: {list: AVAILABILITY, layout: 'radio', direction: 'horizontal'},
+      initialValue: 'available',
+      validation: (rule) => rule.required().error('Elige la disponibilidad'),
+    }),
+    defineField({
+      name: 'sku',
+      title: 'Referencia interna (SKU)',
+      description: 'Opcional. Código para identificar el producto en inventario. No se muestra en la web.',
+      type: 'string',
+      group: 'sale',
+      validation: (rule) => [rule.max(64), trimmedString(rule)],
     }),
     defineField({
       name: 'variants',
-      title: 'Variantes',
+      title: 'Versiones del producto',
       description:
-        'Cada variante (formato, color, acabado…) tiene su propia galería de fotos, precios y disponibilidad. Si el producto solo tiene una versión, crea una única variante. La primera de la lista es la que se muestra por defecto en la web; arrastra para cambiar el orden.',
+        'Utiliza esta sección únicamente si este producto existe en distintas versiones, por ejemplo por formato, color o acabado. Si añades versiones, el cliente elige una de ellas al comprar; cada versión usa las fotos, precios y disponibilidad del producto salvo que indiques otros. La primera de la lista es la seleccionada por defecto; arrastra para cambiar el orden.',
       type: 'array',
       group: 'variants',
       of: [defineArrayMember({type: 'productVariant'})],
       validation: (rule) => [
-        rule.required().min(1).error('Añade al menos una variante'),
         rule.custom((variants) => {
           if (!Array.isArray(variants)) return true
           const seen = new Set<string>()
           for (const v of variants as VariantValue[]) {
-            const key = [v.format, v.colour, v.finish].map((s) => s?.trim().toLowerCase() ?? '').join('|')
+            const key = attributeKey(v)
             if (key === '||') continue
             if (seen.has(key)) {
-              const label = [v.format, v.colour, v.finish].filter(Boolean).join(' · ')
-              return `Hay dos variantes iguales (${label}). Cambia el formato, el color o el acabado de una de ellas.`
+              return `Hay dos versiones iguales (${attributeLabel(v)}). Cambia el formato, el color o el acabado de una de ellas.`
             }
             seen.add(key)
           }
           return true
         }),
         rule.custom((variants) => {
-          if (!Array.isArray(variants) || variants.length === 0) return true
-          return (variants as VariantValue[]).some((v) => v.availability === 'available')
+          if (!Array.isArray(variants) || variants.length < 2) return true
+          const shapes = new Set(
+            (variants as VariantValue[]).map((v) => ATTRIBUTES.filter((a) => v[a]?.trim()).join('+')),
+          )
+          return shapes.size === 1
             ? true
-            : {message: 'Ninguna variante está disponible: el producto no se podrá comprar.', level: 'info'}
+            : {
+                message:
+                  'Las versiones no indican los mismos datos (unas tienen formato, otras color…). Revisa que el cliente pueda distinguirlas.',
+                level: 'warning',
+              }
+        }),
+        rule.custom((variants, context) => {
+          if (!Array.isArray(variants) || variants.length === 0) return true
+          const base = (context.document as {availability?: string} | undefined)?.availability
+          const anyAvailable = (variants as VariantValue[]).some(
+            (v) => (!v.availability || v.availability === INHERIT ? base : v.availability) === 'available',
+          )
+          return anyAvailable
+            ? true
+            : {message: 'Ninguna versión está disponible: el producto no se podrá comprar.', level: 'info'}
         }),
       ],
     }),
@@ -161,21 +223,23 @@ export const product = defineType({
       category: 'category.title',
       visible: 'visible',
       cardImage: 'cardImage',
-      firstVariantImage: 'variants.0.images.0',
+      firstImage: 'images.0',
       variants: 'variants',
+      minimumPrice: 'pricing.minimumPrice',
     },
-    prepare: ({title, category, visible, cardImage, firstVariantImage, variants}) => {
+    prepare: ({title, category, visible, cardImage, firstImage, variants, minimumPrice}) => {
       const count = Array.isArray(variants) ? variants.length : 0
       return {
         title: title || 'Producto sin nombre',
         subtitle: [
           visible === false ? 'OCULTO' : null,
           category,
-          count ? `${count} ${count === 1 ? 'variante' : 'variantes'}` : 'Sin variantes',
+          formatEuros(minimumPrice) && `desde ${formatEuros(minimumPrice)}`,
+          count ? `${count} ${count === 1 ? 'versión' : 'versiones'}` : null,
         ]
           .filter(Boolean)
           .join(' · '),
-        media: cardImage?.asset ? cardImage : firstVariantImage,
+        media: cardImage?.asset ? cardImage : firstImage,
       }
     },
   },

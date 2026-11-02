@@ -1,6 +1,8 @@
 import {ImageIcon} from '@sanity/icons/Image'
 import {defineField, defineType} from 'sanity'
-import {trimmedString} from '../lib/validation'
+import {isInactiveVariantOverride, trimmedString} from '../lib/validation'
+
+type ImageValue = {asset?: unknown}
 
 export const galleryImage = defineType({
   name: 'galleryImage',
@@ -17,12 +19,23 @@ export const galleryImage = defineType({
       description:
         'Describe brevemente lo que se ve. Lo leen las personas que usan lectores de pantalla y los buscadores. Ej.: "Fanzine Blanco y Negro A5, portada en tinta roja".',
       type: 'string',
+      // Required only once an image has been uploaded, so optional images can stay empty.
       validation: (rule) => [
-        rule.required().error('Escribe un texto alternativo para la imagen'),
+        rule.custom((alt, context) => {
+          if (isInactiveVariantOverride(context)) return true
+          const hasAsset = Boolean((context.parent as ImageValue | undefined)?.asset)
+          return hasAsset && !alt ? 'Escribe un texto alternativo para la imagen' : true
+        }),
         rule.max(160),
         trimmedString(rule),
       ],
     }),
   ],
-  validation: (rule) => rule.required().assetRequired().error('Sube una imagen'),
 })
+
+/** Validation for a gallery (array of galleryImage): at least one photo and no empty slots. */
+export const validateGallery = (images: unknown, emptyMessage: string) => {
+  const items = (images as ImageValue[] | undefined) ?? []
+  if (items.length === 0) return emptyMessage
+  return items.every((item) => item?.asset) ? true : 'Hay un hueco sin foto en la galería: sube una imagen o quítalo'
+}

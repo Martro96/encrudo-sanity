@@ -2,12 +2,18 @@ import {ComponentIcon} from '@sanity/icons/Component'
 import {defineField, defineType} from 'sanity'
 import {formatEuros} from '../lib/format'
 import {trimmedString} from '../lib/validation'
+import {validateGallery} from './galleryImage'
 
 export const AVAILABILITY = [
   {title: 'Disponible', value: 'available'},
   {title: 'Agotado', value: 'soldOut'},
   {title: 'Próximamente', value: 'comingSoon'},
 ]
+
+/** Variant availability value meaning "use the product's availability". */
+export const INHERIT = 'inherit'
+
+type VariantParent = {hasOwnImages?: boolean; hasOwnPricing?: boolean}
 
 const attributeField = (name: string, title: string, example: string) =>
   defineField({
@@ -21,21 +27,16 @@ const attributeField = (name: string, title: string, example: string) =>
 
 export const productVariant = defineType({
   name: 'productVariant',
-  title: 'Variante',
+  title: 'Versión',
   type: 'object',
   icon: ComponentIcon,
   fieldsets: [
     {
       name: 'attributes',
-      title: 'Qué distingue a esta variante',
+      title: 'Qué es esta versión',
       description:
-        'Rellena al menos uno. Es lo que verá el cliente al elegir la variante, así que escríbelo siempre igual en todas (mismas mayúsculas y acentos).',
+        'Escribe todo lo que identifica a esta versión, tal como lo elegirá el cliente (ej.: A4 · Rojo · Mate). Basta con uno si es suficiente para distinguirla (ej.: solo "Rojo"). Escríbelo siempre igual en todas las versiones (mismas mayúsculas y acentos).',
       options: {columns: 3},
-    },
-    {
-      name: 'internal',
-      title: 'Datos internos (opcional)',
-      options: {collapsible: true, collapsed: true},
     },
   ],
   fields: [
@@ -43,36 +44,64 @@ export const productVariant = defineType({
     attributeField('colour', 'Color', 'Negro, Rojo'),
     attributeField('finish', 'Acabado', 'Mate, Brillo, Risografía'),
     defineField({
+      name: 'hasOwnImages',
+      title: 'Esta versión usa fotos diferentes',
+      description: 'Desactivado: se muestran las fotos de la galería principal del producto.',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
       name: 'images',
-      title: 'Galería de esta variante',
+      title: 'Fotos de esta versión',
       description:
-        'Fotos que se ven en la ficha del producto cuando el cliente elige esta variante. La primera es la principal; arrastra para reordenar. (La imagen del catálogo se elige aparte, en "Imagen de tarjeta".)',
+        'Se muestran en la ficha del producto cuando el cliente elige esta versión, en lugar de la galería principal. La primera es la principal; arrastra para reordenar.',
       type: 'array',
       of: [{type: 'galleryImage'}],
       options: {layout: 'grid'},
-      validation: (rule) => rule.required().min(1).error('Añade al menos una foto a la galería de esta variante'),
+      hidden: ({parent}) => !(parent as VariantParent | undefined)?.hasOwnImages,
+      validation: (rule) =>
+        rule.custom((images, context) =>
+          (context.parent as VariantParent | undefined)?.hasOwnImages
+            ? validateGallery(images, 'Añade al menos una foto de esta versión, o desactiva "usa fotos diferentes"')
+            : true,
+        ),
+    }),
+    defineField({
+      name: 'hasOwnPricing',
+      title: 'Esta versión tiene precios diferentes',
+      description: 'Desactivado: se usan los precios del producto.',
+      type: 'boolean',
+      initialValue: false,
     }),
     defineField({
       name: 'pricing',
-      title: 'Precios',
+      title: 'Precios de esta versión',
       type: 'pricing',
-      validation: (rule) => rule.required(),
+      hidden: ({parent}) => !(parent as VariantParent | undefined)?.hasOwnPricing,
+      validation: (rule) =>
+        rule.custom((value, context) =>
+          (context.parent as VariantParent | undefined)?.hasOwnPricing && !value
+            ? 'Indica los precios de esta versión, o desactiva "tiene precios diferentes"'
+            : true,
+        ),
     }),
     defineField({
       name: 'availability',
       title: 'Disponibilidad',
-      description: 'Si está agotada o próximamente, se mostrará en la web pero no se podrá comprar.',
+      description: 'Normalmente igual que el producto. Cámbiala solo si esta versión en concreto está agotada o llega más tarde.',
       type: 'string',
-      options: {list: AVAILABILITY, layout: 'radio', direction: 'horizontal'},
-      initialValue: 'available',
-      validation: (rule) => rule.required().error('Elige la disponibilidad'),
+      options: {
+        list: [{title: 'Igual que el producto', value: INHERIT}, ...AVAILABILITY],
+        layout: 'radio',
+        direction: 'horizontal',
+      },
+      initialValue: INHERIT,
     }),
     defineField({
       name: 'sku',
       title: 'Referencia interna (SKU)',
-      description: 'Opcional. Un código para identificar la variante en inventario. No se muestra en la web.',
+      description: 'Opcional. Código para identificar esta versión en inventario. No se muestra en la web.',
       type: 'string',
-      fieldset: 'internal',
       validation: (rule) => [rule.max(64), trimmedString(rule)],
     }),
   ],
@@ -82,31 +111,31 @@ export const productVariant = defineType({
       if (!v) return true
       return v.format || v.colour || v.finish
         ? true
-        : 'Indica al menos un atributo: formato, color o acabado'
+        : 'Indica qué es esta versión: formato, color o acabado (al menos uno)'
     }),
   preview: {
     select: {
       format: 'format',
       colour: 'colour',
       finish: 'finish',
+      hasOwnImages: 'hasOwnImages',
+      hasOwnPricing: 'hasOwnPricing',
       media: 'images.0',
       minimumPrice: 'pricing.minimumPrice',
-      recommendedPrice: 'pricing.recommendedPrice',
       availability: 'availability',
     },
-    prepare: ({format, colour, finish, media, minimumPrice, recommendedPrice, availability}) => {
-      const prices = [
-        formatEuros(minimumPrice) && `mín. ${formatEuros(minimumPrice)}`,
-        formatEuros(recommendedPrice) && `rec. ${formatEuros(recommendedPrice)}`,
-      ]
-        .filter(Boolean)
-        .join(' · ')
+    prepare: ({format, colour, finish, hasOwnImages, hasOwnPricing, media, minimumPrice, availability}) => {
+      const ownAvailability = AVAILABILITY.find((a) => a.value === availability)?.title
       return {
-        title: [format, colour, finish].filter(Boolean).join(' · ') || 'Variante sin atributos',
-        subtitle: [AVAILABILITY.find((a) => a.value === availability)?.title, prices]
-          .filter(Boolean)
-          .join(' — '),
-        media,
+        title: [format, colour, finish].filter(Boolean).join(' · ') || 'Versión sin nombre',
+        subtitle: [
+          hasOwnImages ? 'fotos propias' : 'fotos del producto',
+          hasOwnPricing && formatEuros(minimumPrice)
+            ? `precios propios (mín. ${formatEuros(minimumPrice)})`
+            : 'precios del producto',
+          ownAvailability ?? 'disponibilidad del producto',
+        ].join(' · '),
+        media: hasOwnImages ? media : undefined,
       }
     },
   },
