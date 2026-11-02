@@ -1,6 +1,9 @@
 import {PackageIcon} from '@sanity/icons/Package'
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {AutoSlugInput} from '../components/AutoSlugInput'
+import {GalleryArrayInput} from '../components/GalleryArrayInput'
 import {formatEuros} from '../lib/format'
+import {SLUG_MAX_LENGTH, slugFormat, slugify} from '../lib/slug'
 import {trimmedString} from '../lib/validation'
 import {validateGallery} from '../objects/galleryImage'
 import {AVAILABILITY, INHERIT} from '../objects/productVariant'
@@ -33,13 +36,14 @@ export const product = defineType({
     }),
     defineField({
       name: 'slug',
-      title: 'Dirección web (slug)',
+      title: 'Dirección web',
       description:
-        'Última parte de la dirección del producto en la web (ej.: blanco-y-negro). Pulsa "Generar" para crearla a partir del nombre. Evita cambiarla después de publicar, porque los enlaces antiguos dejarían de funcionar.',
+        'Se crea sola a partir del nombre mientras el producto no se haya publicado (ej.: blanco-y-negro). Una vez publicado ya no cambia aunque cambies el nombre, para no romper enlaces; si de verdad necesitas cambiarla, edítala aquí.',
       type: 'slug',
       group: 'info',
-      options: {source: 'title', maxLength: 96},
-      validation: (rule) => rule.required().error('Genera la dirección web a partir del nombre'),
+      options: {source: 'title', maxLength: SLUG_MAX_LENGTH, slugify},
+      components: {input: AutoSlugInput},
+      validation: (rule) => [rule.required().error('Escribe el nombre para crear la dirección web'), slugFormat(rule)],
     }),
     defineField({
       name: 'visible',
@@ -67,7 +71,22 @@ export const product = defineType({
         'Opcional. Etiquetas para ayudar a encontrar y filtrar productos (ej.: Novedad, Edición limitada). No repitas aquí el formato, color o acabado: eso se indica en las versiones.',
       type: 'array',
       group: 'info',
-      of: [defineArrayMember({type: 'reference', to: [{type: 'tag'}]})],
+      of: [
+        defineArrayMember({
+          type: 'reference',
+          to: [{type: 'tag'}],
+          options: {
+            filter: ({document}) => ({
+              filter: '!(_id in $selected)',
+              params: {
+                selected: ((document?.tags as Array<{_ref?: string}> | undefined) ?? [])
+                  .map((ref) => ref._ref)
+                  .filter(Boolean),
+              },
+            }),
+          },
+        }),
+      ],
       validation: (rule) => rule.unique().error('Esta etiqueta ya está añadida'),
     }),
     defineField({
@@ -130,11 +149,12 @@ export const product = defineType({
       name: 'images',
       title: 'Galería principal',
       description:
-        'Fotos del producto que se muestran en su ficha. La primera es la principal; arrastra para reordenar. Si una versión usa fotos diferentes, se añaden dentro de esa versión.',
+        'Fotos del producto que se muestran en su ficha. Sube o arrastra varias imágenes a la vez (también con "Seleccionar varias imágenes") y después añade el texto alternativo de cada una. La primera será la principal; arrástralas para cambiar el orden. Si una versión usa fotos diferentes, se añaden dentro de esa versión.',
       type: 'array',
       group: 'images',
       of: [defineArrayMember({type: 'galleryImage'})],
       options: {layout: 'grid'},
+      components: {input: GalleryArrayInput},
       validation: (rule) => rule.custom((images) => validateGallery(images, 'Añade al menos una foto a la galería principal')),
     }),
     defineField({
@@ -159,8 +179,9 @@ export const product = defineType({
     }),
     defineField({
       name: 'sku',
-      title: 'Referencia interna (SKU)',
-      description: 'Opcional. Código para identificar el producto en inventario. No se muestra en la web.',
+      title: 'Código interno',
+      description:
+        'Opcional. Si usas un código propio para identificar este producto en inventario o pedidos, escríbelo aquí. Si no utilizas códigos, déjalo vacío. No se muestra en la web.',
       type: 'string',
       group: 'sale',
       validation: (rule) => [rule.max(64), trimmedString(rule)],

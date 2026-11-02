@@ -1,5 +1,6 @@
 import {ComponentIcon} from '@sanity/icons/Component'
 import {defineField, defineType} from 'sanity'
+import {GalleryArrayInput} from '../components/GalleryArrayInput'
 import {formatEuros} from '../lib/format'
 import {trimmedString} from '../lib/validation'
 import {validateGallery} from './galleryImage'
@@ -54,10 +55,11 @@ export const productVariant = defineType({
       name: 'images',
       title: 'Fotos de esta versión',
       description:
-        'Se muestran en la ficha del producto cuando el cliente elige esta versión, en lugar de la galería principal. La primera es la principal; arrastra para reordenar.',
+        'Se muestran en la ficha del producto cuando el cliente elige esta versión, en lugar de la galería principal. Sube o arrastra varias imágenes a la vez (también con "Seleccionar varias imágenes") y después añade el texto alternativo de cada una. La primera será la principal; arrástralas para cambiar el orden.',
       type: 'array',
       of: [{type: 'galleryImage'}],
       options: {layout: 'grid'},
+      components: {input: GalleryArrayInput},
       hidden: ({parent}) => !(parent as VariantParent | undefined)?.hasOwnImages,
       validation: (rule) =>
         rule.custom((images, context) =>
@@ -99,8 +101,9 @@ export const productVariant = defineType({
     }),
     defineField({
       name: 'sku',
-      title: 'Referencia interna (SKU)',
-      description: 'Opcional. Código para identificar esta versión en inventario. No se muestra en la web.',
+      title: 'Código interno de esta versión',
+      description:
+        'Opcional. Si usas un código propio para esta versión en inventario o pedidos, escríbelo aquí. Si no, déjalo vacío. No se muestra en la web.',
       type: 'string',
       validation: (rule) => [rule.max(64), trimmedString(rule)],
     }),

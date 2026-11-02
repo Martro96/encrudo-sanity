@@ -150,3 +150,24 @@ Updated for the product-first editor. Use the `development` dataset only (`SANIT
    - remove the homepage references;
    - delete all UAT TEST documents, including any created with the old variant structure, which will now show validation errors;
    - delete the uploaded test assets.
+
+### 3b. Editor UX refinements (manual UAT — not executed by Devin)
+Use the `development` dataset only.
+1. **New product:** type a name and the Dirección web fills in by itself, without pressing "Generar". Accents and spaces become e.g. `poster-ano-nuevo`.
+2. **Published product:** change the name and check that the Dirección web does **not** change. It can still be edited by hand.
+3. **Tags:** add Tag A, then open the tag picker again. Tag A is no longer offered; other tags are still searchable.
+4. **Duplicate tag:** force a duplicate (e.g. by pasting) and check that the "ya está añadida" error still appears.
+5. **Multiple upload:** drag several images onto Galería principal at once. Then repeat with "Seleccionar varias imágenes" (multi-select in the file dialog). Repeat both in a version with "usa fotos diferentes".
+6. **Upload and draft status:**
+   - while uploading, progress is visible;
+   - once uploaded, the thumbnail appears;
+   - the header badge shows "Sin publicar" / "Cambios sin publicar";
+   - an image without alt text shows "Imagen subida · falta el texto alternativo" and blocks Publicar.
+7. **Alt text:** open each uploaded image and give it its own alt text.
+8. **Order:** drag images to reorder them. The first one is the main image, and the card preview uses it when there is no catálogo image.
+9. **Draft vs Publish on Página de inicio:**
+   - remove a product from the list without publishing, then try to delete that product: it is still blocked;
+   - publish Página de inicio, then try again: the deletion is now allowed.
+   Check that the help text explains this.
+10. **Código interno:** leave it empty on the product and on a version, and check that it publishes without errors. The label reads "Código interno" / "Código interno de esta versión".
+

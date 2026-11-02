@@ -2,6 +2,7 @@ import {defineConfig, defineLocaleResourceBundle, isDev} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
 import {esESLocale} from '@sanity/locale-es-es'
+import {UnpublishedChangesBadge} from './schemaTypes/components/UnpublishedChangesBadge'
 import {schemaTypes} from './schemaTypes'
 import {SINGLETON_TYPES, structure} from './structure'
 
@@ -43,6 +44,7 @@ export default defineConfig({
   },
 
   document: {
+    badges: (badges) => [...badges, UnpublishedChangesBadge],
     actions: (actions, {schemaType}) =>
       SINGLETON_TYPES.has(schemaType)
         ? actions.filter(({action}) => action && SINGLETON_ACTIONS.has(action))

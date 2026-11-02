@@ -10,7 +10,7 @@ export const galleryImage = defineType({
   type: 'image',
   icon: ImageIcon,
   description:
-    'Puedes elegir el punto de interés (hotspot) para que el recorte no corte lo importante. Si subes la misma imagen varias veces, Sanity la guarda solo una vez.',
+    'Cuando la imagen aparece aquí, ya está subida y guardada en el borrador. Puedes marcar el punto de interés para que los recortes no corten lo importante.',
   options: {hotspot: true},
   fields: [
     defineField({
@@ -24,7 +24,7 @@ export const galleryImage = defineType({
         rule.custom((alt, context) => {
           if (isInactiveVariantOverride(context)) return true
           const hasAsset = Boolean((context.parent as ImageValue | undefined)?.asset)
-          return hasAsset && !alt ? 'Escribe un texto alternativo para la imagen' : true
+          return hasAsset && !alt ? 'Imagen subida · falta el texto alternativo' : true
         }),
         rule.max(160),
         trimmedString(rule),
