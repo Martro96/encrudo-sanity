@@ -40,6 +40,13 @@ export const projectPage = defineType({
       ],
     }),
     defineField({
+      name: 'portraitImage',
+      title: 'Imagen de Jorel',
+      description:
+        'Fotografía de Jorel que aparece en la sección Nosotros de la página Proyecto, entre el texto y la cita. Opcional: si la dejas vacía, la página se muestra sin ella.',
+      type: 'galleryImage',
+    }),
+    defineField({
       name: 'quote',
       title: 'Cita',
       description: 'Frase destacada en grande, sin comillas (la web las añade).',
